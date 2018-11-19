@@ -1,0 +1,14 @@
+- title "#{@user.display_name} Followers"
+.container.content_container  
+  %h1
+    = link_to @user.display_name, @user
+  %p
+    %small
+      = pluralize(@scope.count, "follower")
+
+  = render partial: "users/user", collection: @users 
+
+  = paginate @users
+
+
+  

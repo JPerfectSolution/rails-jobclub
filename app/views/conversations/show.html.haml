@@ -1,0 +1,58 @@
+- title @other_users.map(&:display_name).join(", ")
+
+.container-fluid.conversations_container.px-0
+  .row.m-0
+    .col-sm-4.col-md-3.px-0
+      #conversations_container
+        #conversations_header
+          .text-center
+            Messages
+        #conversation_list
+          .list-group#conversations
+            = render @conversations
+    .col-sm-8.col-md-9.px-0
+      #messages_container
+        #messages_header
+          - other_user = @other_users.first
+          .media
+            = link_to image_tag(model_avatar(other_user.avatar, 200, true), width: 48, class: 'd-flex mr-3 rounded-circle'), other_user, target: "_blank"
+            .media-body
+              %strong
+                = link_to other_user.display_name, other_user, target: "_blank"
+              %p
+                %small
+                  = other_user.primary_role_name
+                  - if other_user.company
+                    ·
+                    = other_user.company.name
+                  - if other_user.location.present?
+                    ·
+                    = other_user.location.name
+
+        #messages{ data: {behavior: "messages", "conversation-id": @conversation.id}}
+          - if @messages.any?
+            - last_message = nil
+            - unread = false
+            - @messages.each do |message|
+              - if last_message.nil?
+                .day_cell
+                  = local_time_ago(message.created_at)
+              - elsif message.created_at.to_date != last_message.created_at.to_date
+                .day_cell
+                  = local_time_ago(last_message.created_at)
+              /condition to check whether message by other users are read by current user
+              - if message.user != current_user && !unread && !message.is_read_by?(current_user)
+                - unread = true
+                .unread_cell
+                  Unread
+              = render message
+              - last_message = message
+
+          #typing_indicator
+            .message
+              .message_bubble
+                •••
+        #messages_input
+          = form_for @message do |f|
+            = f.hidden_field :conversation_id, value: @conversation.id
+            = f.text_area :text, class: 'form-control', placeholder: "Type your message", autocomplete: "off", autofocus: true, rows: 1
